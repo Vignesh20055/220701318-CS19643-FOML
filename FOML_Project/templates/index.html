@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🩺 AI Healthcare Chatbot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 1200px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+      padding: 30px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+    textarea, input[type="text"], input[type="time"], select {
+      width: 100%;
+      padding: 15px;
+      margin: 10px 0;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      font-size: 16px;
+      transition: 0.3s;
+      background-color: #fdfdfd;
+    }
+    textarea:focus, input:focus, select:focus {
+      border-color: #7d5fff;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background: #7d5fff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.3s ease;
+    }
+    button:hover { background: #5c3dff; }
+    .output {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #333;
+      background: #f7f7f7;
+      padding: 12px;
+      border-radius: 10px;
+      white-space: pre-line; /* Ensures newlines in the output are preserved */
+    }
+    .voice-button {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .voice-button button {
+      width: auto;
+      background: #4cd3c2;
+    }
+    .voice-button button:hover {
+      background: #31baa7;
+    }
+    @media (max-width: 600px) {
+      .chat-container { padding: 20px; }
+      h1 { font-size: 24px; }
+      textarea, input[type="text"], input[type="time"], button, select { font-size: 15px; }
+    }
+
+    /* Hospital cards styling */
+    .hospital-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+      width: 100%;
+    }
+    .hospital-card {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 250px;
+      overflow: hidden;
+      transition: transform 0.3s ease;
+      margin-bottom: 20px;
+    }
+    .hospital-card:hover {
+      transform: translateY(-10px);
+    }
+    .hospital-card img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+    .hospital-card .content {
+      padding: 15px;
+      text-align: center;
+    }
+    .hospital-card .content h3 {
+      margin: 10px 0;
+      font-size: 20px;
+      color: #333;
+    }
+    .hospital-card .content p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    .hospital-card .content a {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-size: 15px;
+      transition: background-color 0.3s;
+    }
+    .hospital-card .content a:hover {
+      background-color: #45a049;
+    }
+    .chat-history {
+  margin-top: 20px;
+  padding: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: #f7f7f7;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.message {
+  background-color: #ffffff;
+  padding: 8px 12px;
+  margin: 5px 0;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.message:nth-child(odd) {
+  background-color: #eef1ff;
+}
+
+.message:nth-child(even) {
+  background-color: #e7f7f3;
+}
+/* Styling for chat history */
+.chat-history {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+.message {
+  padding: 10px;
+  margin: 5px;
+  border-radius: 8px;
+  background-color: #f1f1f1;
+  margin-bottom: 10px;
+}
+
+.message.user {
+  background-color: #e0f7fa;
+  text-align: left;
+}
+
+.message.bot {
+  background-color: #c8e6c9;
+  text-align: right;
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <h1>🩺 AI Healthcare Chatbot</h1>
+    <audio id="reminder-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+
+    <textarea id="symptoms" rows="4" placeholder="Describe your symptoms..."></textarea>
+    <input type="text" id="location" placeholder="Enter your city/location (optional)">
+    
+    <label for="gender">Select Gender:</label>
+    <select id="gender">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    
+    <button onclick="getHealthAdvice()">Get Health Advice</button>
+
+    <div class="output" id="health-advice">Waiting for your query...</div>
+    <div class="chat-history" id="chat-history"></div>
+
+    
+    <div class="hospital-list" id="hospital-list"></div>
+
+    <input type="time" id="reminder-time">
+    <button onclick="setReminder()">Set Reminder</button>
+    <div class="output" id="reminder-status"></div>
+
+    <div class="voice-button">
+      <button onclick="startVoiceRecognition()">🎤 Start Voice Interaction</button>
+    </div>
+    <div class="output" id="voice-output"></div>
+  </div>
+
+  <script>
+    let chatHistory = [];  // Store conversation history
+
+// Function to update chat history
+function updateChatHistory(message) {
+  chatHistory.push(message);  // Add new message to the history
+  const chatHistoryDiv = document.getElementById('chat-history');
+  
+  chatHistoryDiv.innerHTML = '';  // Clear the current chat history display
+  
+  // Loop through chat history and display each message
+  chatHistory.forEach(msg => {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');  // Add class for styling
+    messageDiv.textContent = msg;  // Set the message text
+    chatHistoryDiv.appendChild(messageDiv);  // Add message to chat history div
+  });
+
+  // Optionally, scroll to the bottom of the chat history
+  chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+}
+
+async function getHealthAdvice() {
+  const symptoms = document.getElementById('symptoms').value;
+  const location = document.getElementById('location').value;
+  const gender = document.getElementById('gender').value;
+  const adviceText = document.getElementById('health-advice');
+
+  if (!symptoms.trim()) {
+    adviceText.textContent = "❗ Please enter symptoms to get advice.";
+    return;
+  }
+
+  // Update chat history with the user's input
+  updateChatHistory(`User: ${symptoms}`);
+
+  try {
+    const response = await fetch("/get_advice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symptoms: symptoms, location: location, gender: gender }),
+    });
+
+    const data = await response.json();
+
+    if (data.advice) {
+      showTypingEffect(data.advice);
+      displayHospitals(data.hospitals);
+
+      // Update chat history with the bot's response
+      updateChatHistory(`Bot: ${data.advice}`);
+    } else {
+      adviceText.textContent = `⚠️ Error: ${data.error}`;
+      document.getElementById('hospital-list').innerHTML = "";
+    }
+  } catch (error) {
+    adviceText.textContent = "⚠️ Error fetching health advice. Please try again.";
+    document.getElementById('hospital-list').innerHTML = "";
+  }
+}
+
+    async function getHealthAdvice() {
+      const symptoms = document.getElementById('symptoms').value;
+      const location = document.getElementById('location').value;
+      const gender = document.getElementById('gender').value;
+      const adviceText = document.getElementById('health-advice');
+
+      if (!symptoms.trim()) {
+        adviceText.textContent = "❗ Please enter symptoms to get advice.";
+        return;
+      }
+
+      try {
+        const response = await fetch("/get_advice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ symptoms: symptoms, location: location, gender: gender }),
+        });
+
+        const data = await response.json();
+
+        if (data.advice) {
+          showTypingEffect(data.advice);  // Call the typing effect function
+          displayHospitals(data.hospitals);
+        } else {
+          adviceText.textContent = `⚠️ Error: ${data.error}`;
+          document.getElementById('hospital-list').innerHTML = "";
+        }
+      } catch (error) {
+        adviceText.textContent = "⚠️ Error fetching health advice. Please try again.";
+        document.getElementById('hospital-list').innerHTML = "";
+      }
+    }
+
+    function showTypingEffect(text) {
+      const container = document.getElementById('health-advice');
+      container.innerHTML = '';  // Clear previous advice content
+      let i = 0;
+      
+      function typeWriter() {
+        if (i < text.length) {
+          container.innerHTML += text.charAt(i);
+          i++;
+          setTimeout(typeWriter, 5);  // Adjust typing speed here
+        }
+      }
+
+      typeWriter();  // Start the typing animation
+    }
+
+    function displayHospitals(hospitals) {
+      const hospitalList = document.getElementById('hospital-list');
+      hospitalList.innerHTML = '';
+
+      hospitals.forEach(hospital => {
+        const imageUrl = getHospitalImage(hospital.name);
+
+        const card = ` 
+          <div class="hospital-card">
+            <img src="${imageUrl}" alt="${hospital.name}">
+            <div class="content">
+              <h3>${hospital.name}</h3>
+              <p>${hospital.location}</p>
+              <a href="${hospital.google_maps}" target="_blank">📍 View on Google Maps</a>
+            </div>
+          </div>
+        `;
+        hospitalList.innerHTML += card;
+      });
+    }
+
+    function getHospitalImage(name) {
+      name = name.toLowerCase();
+      if (name.includes('apollo')) return 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Apollo_Hospitals_Logo.png';
+      if (name.includes('fortis')) return 'https://upload.wikimedia.org/wikipedia/en/2/2b/Fortis_Healthcare_Logo.png';
+      if (name.includes('kauvery')) return 'https://upload.wikimedia.org/wikipedia/en/4/46/Kauvery_Hospital_logo.png';
+      if (name.includes('aiims')) return 'https://upload.wikimedia.org/wikipedia/en/3/36/All_India_Institute_of_Medical_Sciences_Logo.png';
+      if (name.includes('manipal')) return 'https://upload.wikimedia.org/wikipedia/en/b/b3/Manipal_Hospitals_Logo.png';
+      if (name.includes('lilavati')) return 'https://upload.wikimedia.org/wikipedia/en/3/3e/Lilavati_Hospital_Logo.png';
+      if (name.includes('yashoda')) return 'https://upload.wikimedia.org/wikipedia/en/9/9c/Yashoda_Hospitals_Logo.png';
+      if (name.includes('care')) return 'https://upload.wikimedia.org/wikipedia/en/1/1b/Care_Hospitals_Logo.png';
+      if (name.includes('hinduja')) return 'https://upload.wikimedia.org/wikipedia/en/4/45/Hinduja_Hospital_Logo.png';
+      if (name.includes('govt')) return 'https://img.freepik.com/free-vector/public-building-illustration_53876-17616.jpg';
+      return 'https://img.freepik.com/free-vector/hospital-building-concept-illustration_114360-7500.jpg';
+    }
+
+    function setReminder() {
+  const reminderTime = document.getElementById('reminder-time').value;
+  const reminderStatus = document.getElementById('reminder-status');
+
+  if (!reminderTime) {
+    reminderStatus.textContent = "⏰ Please select a time for the reminder.";
+    return;
+  }
+
+  const now = new Date();
+  const [hours, minutes] = reminderTime.split(':');
+  const reminderDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+  const timeUntilReminder = reminderDate - now;
+
+  if (timeUntilReminder <= 0) {
+    reminderStatus.textContent = "⚠️ Time already passed. Please select a future time.";
+    return;
+  }
+
+  reminderStatus.textContent = `🔔 Reminder set for ${reminderTime}.`;
+
+  setTimeout(() => {
+    // ✅ Play beep sound
+    const sound = document.getElementById("reminder-sound");
+    sound.currentTime = 0; // Rewind to start
+    sound.play().catch(e => console.log("Audio play error:", e));
+
+    // ✅ Speak message
+    const msg = new SpeechSynthesisUtterance("Time to reach out the hospital");
+    msg.lang = "en-US";
+    msg.rate = 1;
+    speechSynthesis.speak(msg);
+
+    alert("🔔 Time to reach hospital!");
+  }, timeUntilReminder);
+}
+
+
+
+    function startVoiceRecognition() {
+      if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+        alert("❌ Your browser does not support voice recognition.");
+        return;
+      }
+
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+      
+      recognition.start();
+      
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('voice-output').textContent = `You said: ${transcript}`;
+        document.getElementById('symptoms').value = transcript;
+      };
+      
+      recognition.onspeechend = function () {
+        recognition.stop();
+      };
+      
+      recognition.onerror = function (event) {
+        alert("⚠️ Error occurred in speech recognition: " + event.error);
+      };
+    }
+  </script>
+</body>
+</html>
